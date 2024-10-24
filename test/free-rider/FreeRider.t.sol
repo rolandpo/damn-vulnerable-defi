@@ -11,6 +11,7 @@ import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
 import {FreeRiderNFTMarketplace} from "../../src/free-rider/FreeRiderNFTMarketplace.sol";
 import {FreeRiderRecoveryManager} from "../../src/free-rider/FreeRiderRecoveryManager.sol";
 import {DamnValuableNFT} from "../../src/DamnValuableNFT.sol";
+import {Attack} from "../../src/free-rider/Attack.sol";
 
 contract FreeRiderChallenge is Test {
     address deployer = makeAddr("deployer");
@@ -123,7 +124,12 @@ contract FreeRiderChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_freeRider() public checkSolvedByPlayer {
-        
+        console.log("player balance: ", player.balance / 1e18);
+
+        Attack attack = new Attack(player, address(uniswapPair), address(marketplace), address(recoveryManager), address(nft), address(weth));
+        attack.attack();
+
+        console.log("player balance: ", player.balance / 1e18);
     }
 
     /**
